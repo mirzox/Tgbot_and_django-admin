@@ -14,8 +14,11 @@ from ...functions import (
     start, take_contact,
     language_chosen,
     food_type_chosen,
+    food_chosen,
+    back_button,
+    quantity_chosen
 )
-from ...models import FoodType
+from ...models import FoodType, Food
 
 
 class Command(BaseCommand):
@@ -27,11 +30,20 @@ class Command(BaseCommand):
 
         dp.add_handler(CommandHandler('start', start))
         dp.add_handler(MessageHandler(Filters.contact, take_contact))
+        dp.add_handler(CallbackQueryHandler(pattern='back', callback=back_button))
+        dp.add_handler(CallbackQueryHandler(pattern='next', callback=))
 
         for i in ['ru', 'uz']:
             dp.add_handler(CallbackQueryHandler(pattern=i, callback=language_chosen))
 
         for i in FoodType.objects.all().values('calldata'):
             dp.add_handler(CallbackQueryHandler(pattern=i['calldata'], callback=food_type_chosen))
+
+        for i in Food.objects.all().values('calldata'):
+            dp.add_handler(CallbackQueryHandler(pattern=i['calldata'], callback=food_chosen))
+
+        for j in range(1, 10):
+            dp.add_handler(CallbackQueryHandler(pattern=str(j), callback=quantity_chosen))
+
         updater.start_polling()
         updater.idle()

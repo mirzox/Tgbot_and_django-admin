@@ -3,6 +3,16 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 from .models import FoodType, Food
 
 
+def build_menu(buttons, n_cols, header_buttons=None, footer_buttons=None):
+    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
+    if header_buttons:
+        menu.insert(0, header_buttons)
+    if footer_buttons:
+        for i in footer_buttons:
+            menu.append([i])
+    return menu
+
+
 def choose_lang():
     items = [
         [
@@ -32,38 +42,20 @@ def send_contact(lang):
     return ReplyKeyboardMarkup(item, resize_keyboard=True, one_time_keyboard=True)
 
 
-def generate_food_type():
+def generate_food_type(cart=None):
     foodtypes = FoodType.objects.all().values('text', 'calldata')
-    print(foodtypes)
-    items = [[InlineKeyboardButton(text=i['text'], callback_data=i['calldata'])] for i in foodtypes]
-    return InlineKeyboardMarkup(items)
+    items = [InlineKeyboardButton(text=i['text'], callback_data=i['calldata']) for i in foodtypes]
+    if cart is None:
+        return InlineKeyboardMarkup(build_menu(items, 2))
+    cart = [InlineKeyboardButton(text='Корзина', callback_data='cart')]
+    return InlineKeyboardMarkup(build_menu(items, 2, footer_buttons=cart))
 
 
 def generate_food(data):
-    foods = Food.objects.get(type=data).values('text', 'calldata')
-    items = [[InlineKeyboardButton(text=i['text'], callback_data=i['calldata'])] for i in foods]
-    items.append([InlineKeyboardButton(text="⬅Назад", callback_data="back")])
-    return InlineKeyboardMarkup(items)
-    # if data == 'lavash':
-    #     items = []
-    #
-    # elif data == 'burger':
-    #     items = [
-    #         [
-    #             InlineKeyboardButton('Burger', callback_data='food_burger'),
-    #             InlineKeyboardButton('Chiz burger', callback_data='food_chizburger')
-    #         ],
-    #         [
-    #             InlineKeyboardButton('Big burger', callback_data='food_big_burger'),
-    #             InlineKeyboardButton('Big chiz', callback_data='food_big_chiz')
-    #         ],
-    #         [
-    #             InlineKeyboardButton(text="⬅Назад", callback_data="back")
-    #         ]
-    #     ]
-    # else:
-    #     pass
-    # return InlineKeyboardMarkup(inline_keyboard=items)
+    foods = Food.objects.filter(type=data).values('text', 'calldata')
+    items = [InlineKeyboardButton(text=i['text'], callback_data=i['calldata']) for i in foods]
+    footer = [InlineKeyboardButton(text="⬅Назад", callback_data="back")]
+    return InlineKeyboardMarkup(build_menu(items, 2, footer_buttons=footer))
 
 
 def quantity_for_food():
@@ -76,13 +68,26 @@ def quantity_for_food():
                 InlineKeyboardButton(text=str(i+2), callback_data=str(i+2))
             ]
         )
-    items += [
-        [
-            InlineKeyboardButton(text='0', callback_data='0'),
-            InlineKeyboardButton(text="Удалить", callback_data='delete')
-        ],
-        [
-            InlineKeyboardButton(text="⬅ Назад", callback_data="bc_to_food")
-        ]
-    ]
+    items.append([InlineKeyboardButton(text="⬅ Назад", callback_data="back")])
     return InlineKeyboardMarkup(inline_keyboard=items)
+
+
+def quantity_chosen_mrk(lang):
+    if lang == 'ru':
+        items = [
+            [
+                InlineKeyboardButton(text='Оформить заказ😊', callback_data='finish_order'),
+                InlineKeyboardButton(text='Далее >>', callback_data='next')
+             ]
+        ]
+
+    elif lang == 'uz':
+        items = [
+            [
+                InlineKeyboardButton(text='Buyurtmani davometirish😊', callback_data='finish_order'),
+                InlineKeyboardButton(text='Dalee >>', callback_data='next')
+             ]
+        ]
+    else:
+        items = []
+    return InlineKeyboardMarkup(items)

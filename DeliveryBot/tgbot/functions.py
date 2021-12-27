@@ -69,6 +69,8 @@ def send_food_type(update, context):
     user = TgUser.objects.get(chat_id=user_id)
     order = Order(chat_id=user)
     order.save()
+    user.stage = 4
+    user.save()
     context.bot.send_message(
         chat_id=user_id,
         text=translates[user.language]['contact_chosen'],
@@ -82,10 +84,8 @@ def food_type_chosen(update, context):
     data = update.callback_query.data
     user = TgUser.objects.get(chat_id=user_id)
     foodtype = FoodType.objects.get(calldata=data)
-    print(foodtype)
-    order = Order.objects.get(chat_id=user_id, status='in cart')
-    print(type(foodtype))
-    user.stage = 4
+    order = Order.objects.get(chat_id=user_id, status='in progress')
+    user.stage = 5
     order.type = foodtype
     order.save()
     user.save()
@@ -93,5 +93,83 @@ def food_type_chosen(update, context):
         chat_id=user_id,
         message_id=msg_id,
         text=f"{translates[user.language]['food_type_chosen']}{data}",
-        reply_markup=mrk.generate_food(data)
+        reply_markup=mrk.generate_food(foodtype)
+    )
+
+
+def food_chosen(update, context):
+    user_id = update.callback_query.message.chat.id
+    msg_id = update.callback_query.message.message_id
+    user = TgUser.objects.get(chat_id=user_id)
+    data = update.callback_query.data
+    food = Food.objects.get(calldata=data)
+    order = Order.objects.get(chat_id=user, status='in progress')
+    order.food = food
+    user.stage = 6
+    order.save()
+    user.save()
+    context.bot.edit_message_text(
+        chat_id=user_id,
+        message_id=msg_id,
+        text=translates[user.language]['food_chosen'],
+        reply_markup=mrk.quantity_for_food()
+    )
+
+
+def back_button(update, context):
+    user_id = update.callback_query.message.chat.id
+    msg_id = update.callback_query.message.message_id
+    user = TgUser.objects.get(chat_id=user_id)
+    if user.stage == 5:
+        context.bot.edit_message_text(
+            chat_id=user_id,
+            message_id=msg_id,
+            text=translates[user.language]['contact_chosen'],
+            reply_markup=mrk.generate_food_type()
+        )
+    elif user.stage == 6:
+        order = Order.objects.get(chat_id=user_id, status='in progress')
+        user.stage = 5
+        user.save()
+        context.bot.edit_message_text(
+            chat_id=user_id,
+            message_id=msg_id,
+            text=translates[user.language]['food_type_chosen'],
+            reply_markup=mrk.generate_food(order.type)
+        )
+
+
+def quantity_chosen(update, context):
+    user_id = update.callback_query.message.chat.id
+    msg_id = update.callback_query.message.message_id
+    data = update.callback_query.data
+    user = TgUser.objects.get(chat_id=user_id)
+    order = Order.objects.get(chat_id=user_id, status='in progress')
+    order.quantity = int(data)
+    order.save()
+    user.stage = 7
+    user.save()
+    context.bot.edit_message_text(
+        chat_id=user_id,
+        message_id=msg_id,
+        text=translates[user.language]['quantity_chosen'],
+        reply_markup=mrk.quantity_chosen_mrk(user.language)
+    )
+
+
+def continue_order(update, context):
+    user_id = update.callback_query.message.chat.id
+    msg_id = update.callback_query.message.message_id
+    user = TgUser.objects.get(chat_id=user_id)
+    order = Order.objects.get(chat_id=user_id, status='in progress')
+    order.status = 'in cart'
+    order.save()
+    order = Order(chat_id=user)
+    order.save()
+    user.stage = 4
+    user.save()
+    context.bot.send_message(
+        chat_id=user_id,
+        text=translates[user.language]['contact_chosen'],
+        reply_markup=mrk.generate_food_type()
     )

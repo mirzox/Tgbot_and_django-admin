@@ -34,8 +34,8 @@ class FoodType(models.Model):
         verbose_name = 'FoodType'
         verbose_name_plural = 'FoodTypes'
 
-    # def __str__(self):
-    #     return f"{self.text} - {self.calldata}"
+    def __str__(self):
+        return f"{self.text} - {self.calldata}"
 
 
 class Food(models.Model):
@@ -48,8 +48,8 @@ class Food(models.Model):
         verbose_name = 'Food'
         verbose_name_plural = 'Foods'
 
-    # def __str__(self):
-    #     return f"{self.type} - {self.text} - {self.price}"
+    def __str__(self):
+        return f"{self.type} - {self.text} - {self.price}"
 
 
 class Order(models.Model):
@@ -57,7 +57,7 @@ class Order(models.Model):
     type = models.ForeignKey(FoodType, on_delete=models.CASCADE, null=True, blank=True)
     food = models.ForeignKey(Food, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField(null=True, blank=True)
-    status = models.CharField(max_length=50, default='in cart')
+    status = models.CharField(max_length=50, default='in progress')
 
     class Meta:
         verbose_name = 'Order'
