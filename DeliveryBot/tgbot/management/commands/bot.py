@@ -16,7 +16,9 @@ from ...functions import (
     food_type_chosen,
     food_chosen,
     back_button,
-    quantity_chosen
+    quantity_chosen,
+    continue_order,
+    finish_order,
 )
 from ...models import FoodType, Food
 
@@ -31,7 +33,8 @@ class Command(BaseCommand):
         dp.add_handler(CommandHandler('start', start))
         dp.add_handler(MessageHandler(Filters.contact, take_contact))
         dp.add_handler(CallbackQueryHandler(pattern='back', callback=back_button))
-        dp.add_handler(CallbackQueryHandler(pattern='next', callback=))
+        dp.add_handler(CallbackQueryHandler(pattern='next', callback=continue_order))
+        dp.add_handler(CallbackQueryHandler(pattern='finish_order', callback=finish_order))
 
         for i in ['ru', 'uz']:
             dp.add_handler(CallbackQueryHandler(pattern=i, callback=language_chosen))

@@ -168,8 +168,28 @@ def continue_order(update, context):
     order.save()
     user.stage = 4
     user.save()
-    context.bot.send_message(
+    context.bot.edit_message_text(
         chat_id=user_id,
+        message_id=msg_id,
         text=translates[user.language]['contact_chosen'],
         reply_markup=mrk.generate_food_type()
+    )
+
+
+def finish_order(update, context):
+    user_id = update.callback_query.message.chat.id
+    msg_id = update.callback_query.message.message_id
+    user = TgUser.objects.get(chat_id=user_id)
+    order = Order.objects.get(chat_id=user_id, status='in progress')
+    order.status = 'in cart'
+    order.save()
+    order = Order.objects.filter(chat_id=user_id, status='in cart')
+    text = '\n'.join([f"{i.food.text} - {i.quantity} - {i.cost}" for i in order])
+    user.stage = 8
+    user.save()
+    context.bot.edit_message_text(
+        chat_id=user_id,
+        message_id=msg_id,
+        text=text,
+        reply_markup=None
     )

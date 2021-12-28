@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 # Create your models here.
 
 
@@ -51,12 +52,16 @@ class Food(models.Model):
     def __str__(self):
         return f"{self.type} - {self.text} - {self.price}"
 
+    def get_price(self, quantity: float):
+        return self.price * quantity
+
 
 class Order(models.Model):
     chat_id = models.ForeignKey(TgUser, on_delete=models.CASCADE)
     type = models.ForeignKey(FoodType, on_delete=models.CASCADE, null=True, blank=True)
     food = models.ForeignKey(Food, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField(null=True, blank=True)
+    cost = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=50, default='in progress')
 
     class Meta:
@@ -65,3 +70,14 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.chat_id} - {self.type} - {self.status}"
+
+
+@receiver(post_save, sender=Order)
+def update_order(sender, instance, **kwargs):
+    if instance.status == 'in cart' and instance.cost is None:
+        food = Food.objects.get(calldata=instance.food.calldata)
+        order = Order.objects.filter(chat_id=instance.chat_id,
+                                     status='in cart',
+                                     cost=None
+                                     ).update(cost=food.get_price(instance.quantity))
+
