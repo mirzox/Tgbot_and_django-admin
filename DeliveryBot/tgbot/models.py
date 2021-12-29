@@ -28,8 +28,8 @@ class TgUser(models.Model):
 
 class FoodType(models.Model):
     id = models.PositiveIntegerField(primary_key=True, unique=True, auto_created=True)
-    text = models.CharField(max_length=50)
-    calldata = models.CharField(max_length=50)
+    text = models.CharField(max_length=50, unique=True)
+    calldata = models.CharField(max_length=50, unique=True)
 
     class Meta:
         verbose_name = 'FoodType'
@@ -41,8 +41,8 @@ class FoodType(models.Model):
 
 class Food(models.Model):
     type = models.ForeignKey(FoodType, on_delete=models.CASCADE)
-    text = models.CharField(max_length=50)
-    calldata = models.CharField(max_length=50)
+    text = models.CharField(max_length=50, unique=True)
+    calldata = models.CharField(max_length=50, unique=True)
     price = models.FloatField()
 
     class Meta:

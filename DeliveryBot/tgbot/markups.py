@@ -1,6 +1,12 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardRemove
+)
 
-from .models import FoodType, Food
+from .models import FoodType, Food, Order
 
 
 def build_menu(buttons, n_cols, header_buttons=None, footer_buttons=None):
@@ -52,7 +58,7 @@ def generate_food_type(cart=None):
 
 
 def generate_food(data):
-    foods = Food.objects.filter(type=data).values('text', 'calldata')
+    foods = Food.objects.filter(type__calldata=data).values('text', 'calldata')
     items = [InlineKeyboardButton(text=i['text'], callback_data=i['calldata']) for i in foods]
     footer = [InlineKeyboardButton(text="⬅Назад", callback_data="back")]
     return InlineKeyboardMarkup(build_menu(items, 2, footer_buttons=footer))
@@ -91,3 +97,39 @@ def quantity_chosen_mrk(lang):
     else:
         items = []
     return InlineKeyboardMarkup(items)
+
+
+def delete_cart_items(order):
+    if order.count() != 0:
+        items = [InlineKeyboardButton(text=f"❌ {i.food.text}",
+                                      callback_data=f"delete_{i.food.calldata}") for i in order]
+        footer = [InlineKeyboardButton(text='Оформить заказ', callback_data='order_finished')]
+        return InlineKeyboardMarkup(build_menu(items, 2, footer_buttons=footer))
+    else:
+        return generate_food_type()
+
+
+def send_location(lang):
+    if lang == 'ru':
+        item = [
+            [KeyboardButton("Отправить локацию", request_location=True)]
+        ]
+    elif lang == 'uz':
+        item = [
+            [KeyboardButton("Lokatsiya jonatish", request_location=True)]
+        ]
+    else:
+        pass
+    return ReplyKeyboardMarkup(item, resize_keyboard=True, one_time_keyboard=True)
+
+
+def check_location_markups():
+    items = [
+        InlineKeyboardButton('Да', callback_data='yes'),
+        InlineKeyboardButton('Нет', callback_data='no')
+    ]
+    return InlineKeyboardMarkup(build_menu(items, 2))
+
+
+def remove():
+    return ReplyKeyboardRemove()

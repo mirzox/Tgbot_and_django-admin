@@ -18,3 +18,5 @@ translates = {
         'quantity_chosen': "Buyurtmani davom etirish",
     }
 }
+
+check_location = 'Адрес, по которому вы хотите заказать:\n {} \n\nВы подтверждаете этот адрес?'
