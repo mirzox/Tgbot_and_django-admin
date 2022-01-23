@@ -1,2 +1,4 @@
-TOKEN = "5056766797:AAFVFNJI-jwyRdD0mXIDgMW70d3ZQXvu7Ak"
-LOCATION_API_TOKEN = 'a6f86bead096be3f0e0bf8075aaa0013'
+import os
+
+TOKEN = os.environ.get("TOKEN")
+LOCATION_API_TOKEN = os.environ.get("LOCATION_API_TOKEN")
